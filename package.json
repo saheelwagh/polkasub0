@@ -45,5 +45,8 @@
     "esbuild",
     "sharp",
     "simple-git-hooks"
-  ]
+  ],
+  "dependencies": {
+    "crypto-browserify": "^3.12.1"
+  }
 }
