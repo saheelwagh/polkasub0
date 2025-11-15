@@ -18,7 +18,7 @@ const buttonOuterVariants = cva(
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
         secondary:
-          "bg-foreground/5 text-foreground hover:bg-foreground/15 dark:bg-foreground/10 dark:hover:bg-foreground/15",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary decoration-inherit underline-offset-2 hover:underline",
         glass:

@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" dir="ltr" className={cn(fontStyles, "dark")} suppressHydrationWarning>
+    <html lang="en" dir="ltr" className={cn(fontStyles)} suppressHydrationWarning>
       <body className="relative flex h-full min-h-screen flex-col">
         <Toaster position="top-center" closeButton />
 

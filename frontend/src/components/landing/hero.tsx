@@ -8,18 +8,18 @@ export function HeroSection() {
     <div className="relative isolate overflow-hidden bg-gradient-to-b from-indigo-100/20">
       <div className="mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
-          <h1 className="text-5xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl">
+          <h1 className="text-5xl font-bold tracking-tight text-foreground sm:text-6xl">
             The Universal Skill School
           </h1>
-          <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
+          <p className="mt-6 text-lg leading-8 text-muted-foreground">
             Unlock your potential with our decentralized learning platform. Learn, earn, and grow with blockchain-powered education.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Link
               href="/app"
               className={cn(
-                "rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm",
-                "hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                "rounded-md bg-primary px-3.5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm",
+                "hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               )}
             >
               <GraduationCap className="mr-2 inline h-4 w-4" />

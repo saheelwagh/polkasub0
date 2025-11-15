@@ -6,7 +6,9 @@ add course -> structure
 
 add tests -> define critria for passing
 
-provision of staking or payments
+build paths
+
+build paths and mini degrees
 
 ## learners side
 
@@ -16,10 +18,6 @@ take test
 
 earn cred points
 
-build paths
-
-build paths and mini degrees
-
 request for courses
 
-## request for course based dev
+## request for course
