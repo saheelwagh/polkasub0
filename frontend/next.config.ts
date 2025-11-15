@@ -15,6 +15,16 @@ const nextConfig: NextConfig = {
   // Fix Next.js Turbopack Builds in Bun Monorepos
   // Source: https://github.com/vercel/next.js/discussions/55987#discussioncomment-12316599
   // outputFileTracingRoot: path.join(__dirname, "../../"),
+  
+  // Turbopack configuration for browser polyfills
+  turbo: {
+    resolveAlias: {
+      crypto: 'crypto-browserify',
+      stream: 'stream-browserify',
+      buffer: 'buffer',
+    },
+  },
+  
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -23,6 +33,13 @@ const nextConfig: NextConfig = {
         stream: require.resolve('stream-browserify'),
         buffer: require.resolve('buffer/'),
       };
+
+      // Add polyfill for Buffer
+      config.plugins.push(
+        new webpack.ProvidePlugin({
+          Buffer: ['buffer', 'Buffer'],
+        })
+      );
     }
     return config;
   },

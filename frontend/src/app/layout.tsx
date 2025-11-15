@@ -6,6 +6,7 @@ import { cn } from "../lib/utils"
 import { fontStyles } from "../styles/fonts"
 
 import "../styles/globals.css"
+import "../lib/crypto-polyfill"
 
 export const metadata: Metadata = siteMetadata
 
