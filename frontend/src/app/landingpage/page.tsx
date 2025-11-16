@@ -121,6 +121,56 @@ export default function LandingPage() {
           </p>
         </div>
       </section>
+            {/* How Learning Works */}
+      <section
+        id="how-learning-works"
+        className="bg-card text-foreground"
+      >
+        <div className="mx-auto max-w-5xl px-6 py-12">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+           Learn anything and get certified
+          </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed">
+            Pick any skill and complete the roadmaps to learn it. 
+          </p>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            <div>
+              <h3 className="text-base font-semibold">
+                Follow focused paths
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Each path is built around a single outcome, like “ship your first ink! contract” or
+                “launch a small loyalty program,” so progress always feels concrete.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold">
+                Prove what you’ve learned
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Embedded quizzes and community tests let learners validate their skills and give
+                curators feedback on where paths can improve.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+        {/* How request Works */}
+      <section
+        id="how-request-works"
+        className="mt-20 bg-primary text-primary-foreground"
+      >
+        <div className="mx-auto max-w-5xl px-6 py-12">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            Request any skill
+          </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed">
+            Request any skill you want to learn and let curators assemble the best resources on the web.
+          </p>
+        </div>
+      </section>
     </main>
   )
 }
