@@ -22,10 +22,8 @@ export default function LandingPage() {
       {/* Navbar with search */}
       <header className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-primary">Curation platform</p>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Curation platform for the world
-          </h1>
+          <p className="text-sm font-semibold uppercase tracking-wide text-primary">Curiversity</p>
+          
         </div>
 
         <div className="w-full max-w-md">
@@ -65,6 +63,12 @@ export default function LandingPage() {
           <p className="mt-3 text-sm leading-relaxed">
             Combine knowledge into a specific skill and publish it as a curated path others can follow.
           </p>
+          <button
+            className="mt-4 w-fit text-sm font-medium underline underline-offset-4 decoration-primary-foreground/60 hover:decoration-primary-foreground"
+            type="button"
+          >
+            Learn more
+          </button>
         </div>
 
         {/* Learn */}
@@ -73,6 +77,12 @@ export default function LandingPage() {
           <p className="mt-3 text-sm leading-relaxed">
             Learn a hyperspecific skill curated just for you, with focused paths instead of endless courses.
           </p>
+          <button
+            className="mt-4 w-fit text-sm font-medium text-primary underline underline-offset-4 decoration-primary/60 hover:decoration-primary"
+            type="button"
+          >
+            Learn more
+          </button>
         </div>
 
         {/* Request */}
@@ -80,6 +90,34 @@ export default function LandingPage() {
           <h2 className="text-lg font-semibold">Request</h2>
           <p className="mt-3 text-sm leading-relaxed">
             Request a skill you want to learn and let curators assemble the best resources on the web.
+          </p>
+          <button
+            className="mt-4 w-fit text-sm font-medium underline underline-offset-4 decoration-primary-foreground/60 hover:decoration-primary-foreground"
+            type="button"
+          >
+            Learn more
+          </button>
+        </div>
+      </section>
+            {/* How Curation Works */}
+      <section
+        id="how-curation-works"
+        className="mt-20 bg-primary text-primary-foreground"
+      >
+        <div className="mx-auto max-w-5xl px-6 py-12">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            Anyone can educate
+          </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed">
+            Curiversity lets you turn your specific skill into a path for others.
+            All you need is a link to the resource. 
+          </p>
+          <div className="px-4 py-4"></div>
+          <h3 className="text-xl font-bold tracking-tight sm:text-2xl ">
+            Anyone can test
+          </h3>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed">
+            Design free or paid test material on any listed skill. Help others reinforce and prove what they've learnt. 
           </p>
         </div>
       </section>
