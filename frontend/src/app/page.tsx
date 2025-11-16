@@ -2,13 +2,14 @@
 
 import { Button } from "@/components/ui/button-extended"
 import { Footer } from "@/components/layout/footer"
-import { Header } from "@/components/layout/header"
+import { Navbar } from "@/components/layout/navbar"
 import Link from "next/link"
 import { ArrowRight, Zap, Shield, DollarSign } from "lucide-react"
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
+      <Navbar />
       
       
       {/* Hero Section */}

@@ -74,25 +74,42 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const Comp = asChild ? Slot : "button"
+    
+    const content = (
+      <>
+        <div className={buttonInnerVariants({ isLoading })}>{children}</div>
+        {/* Loading Spinner */}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center gap-2">
+            <LoaderIcon className="animate-spin" />
+            {!!loadingText && loadingText}
+          </div>
+        )}
+      </>
+    )
+
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonOuterVariants({ variant, size }), className)}
+          {...props}
+        >
+          <span className="relative inline-flex items-center justify-center">
+            {content}
+          </span>
+        </Slot>
+      )
+    }
+
     return (
-      <Comp
+      <button
         className={cn(buttonOuterVariants({ variant, size }), className)}
         disabled={disabled || isLoading}
         ref={ref}
         {...props}
       >
-        <React.Fragment>
-          <div className={buttonInnerVariants({ isLoading })}>{children}</div>
-
-          {/* Loading Spinner */}
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center gap-2">
-              <LoaderIcon className="animate-spin" />
-              {!!loadingText && loadingText}
-            </div>
-          )}
-        </React.Fragment>
-      </Comp>
+        {content}
+      </button>
     )
   },
 )
