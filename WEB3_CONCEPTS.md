@@ -363,4 +363,248 @@ const contract = new Contract(CONTRACT_ADDRESS, metadata, api)
 
 ---
 
+---
+
+## 🆕 **Sprint 2: Advanced Web3 Concepts**
+
+### **Time-Based Vesting**
+
+**Concept**: Gradual release of funds over time based on blockchain timestamps
+
+**Real-world analogy**: Like a salary that accumulates every second rather than being paid monthly
+
+**Implementation**:
+
+```rust
+// Calculate vested amount based on time elapsed
+let time_elapsed = current_time - last_claim_time;
+let seconds_elapsed = time_elapsed / 1000; // Convert ms to seconds
+let vested_amount = seconds_elapsed * rate_per_second;
+```
+
+**Key Benefits**:
+
+- **Smooth cash flow** for creators (no waiting for monthly payments)
+- **Fair for fans** (only pay for time subscribed)
+- **Automatic** (no human intervention needed)
+
+### **Blockchain Time Management**
+
+**Concept**: Using block timestamps for time calculations
+
+**How it works**:
+
+```rust
+let now = self.env().block_timestamp(); // Milliseconds since Unix epoch
+```
+
+**Important points**:
+
+- **Block time**: ~6 seconds on Polkadot (new block every 6 seconds)
+- **Timestamp accuracy**: Good enough for subscription billing
+- **Immutable**: Users can't manipulate time to cheat the system
+- **Consensus**: All nodes agree on the same timestamp
+
+### **Saturating Arithmetic**
+
+**Concept**: Safe math operations that prevent overflow/underflow crashes
+
+**Why needed**: Regular math can crash smart contracts if numbers get too big/small
+
+**Examples**:
+
+```rust
+// Unsafe (could crash):
+let result = a - b; // Panics if b > a
+
+// Safe (never crashes):
+let result = a.saturating_sub(b); // Returns 0 if b > a
+let result = a.saturating_add(b); // Returns max value if overflow
+```
+
+**Use cases in our contract**:
+
+- Calculating refunds (prevent negative amounts)
+- Adding earnings (prevent overflow)
+- Time calculations (handle edge cases)
+
+### **IPFS Integration**
+
+**Concept**: Decentralized file storage for exclusive content
+
+**IPFS (InterPlanetary File System)**:
+
+- **Decentralized**: No single point of failure
+- **Content-addressed**: Files identified by cryptographic hash
+- **Immutable**: Content can't be changed once uploaded
+- **Distributed**: Stored across many nodes worldwide
+
+**How we use it**:
+
+```rust
+// Store only the hash on blockchain (cheap)
+profile.content_hash = Some("QmX7M9CiYXjVQX8Z2HvjKq4XvLqWjAoKGmhq9F3nR8sT4u");
+
+// Fans download actual content from IPFS using the hash
+```
+
+**Benefits**:
+
+- **Cost-effective**: Only store small hash, not large files
+- **Censorship-resistant**: No central authority can remove content
+- **Global availability**: Content accessible from anywhere
+
+### **Content Gating Patterns**
+
+**Concept**: Restricting access to content based on subscription status
+
+**Access control flow**:
+
+1. **Check subscription**: Does fan have active subscription?
+2. **Verify creator**: Does creator exist and have content?
+3. **Grant/deny access**: Return content hash or error
+
+**Implementation**:
+
+```rust
+// Check if fan is subscribed
+if !self.subscriptions.contains((fan, creator)) {
+    return Err(Error::SubscriptionRequired);
+}
+
+// Return content hash if subscribed
+profile.content_hash.ok_or(Error::CreatorNotFound)
+```
+
+**Frontend integration**:
+
+```typescript
+try {
+  const contentHash = await contract.query.getCreatorContent(creatorAddress)
+  // Fan is subscribed - show content
+  displayContent(contentHash)
+} catch (error) {
+  // Fan not subscribed - show subscription prompt
+  showSubscribeButton()
+}
+```
+
+### **State Mutations vs Queries**
+
+**Concept**: Different types of blockchain interactions with different costs
+
+**Query Functions** (Read-only):
+
+- **Cost**: Free (no gas fees)
+- **Speed**: Instant response
+- **Purpose**: Get information from blockchain
+- **Example**: `get_creator_profile()`, `get_subscription()`
+
+**Mutation Functions** (State-changing):
+
+- **Cost**: Gas fees required
+- **Speed**: Async (wait for block confirmation)
+- **Purpose**: Change blockchain state
+- **Example**: `register_creator()`, `claim_earnings()`
+
+**Payable Functions** (Receive tokens):
+
+- **Special type**: Can receive DOT with the transaction
+- **Example**: `subscribe()` - fan sends DOT with subscription
+
+### **Event-Driven Architecture**
+
+**Concept**: Smart contracts emit events that frontends can listen to
+
+**Why events matter**:
+
+- **Real-time updates**: Frontend knows immediately when something happens
+- **Efficient**: Don't need to constantly poll the blockchain
+- **Indexed**: Can search for specific events efficiently
+
+**Event examples**:
+
+```rust
+// Contract emits event
+self.env().emit_event(CreatorRegistered {
+    creator: caller,
+    name: name.clone(),
+});
+
+// Frontend listens for event
+contract.events.CreatorRegistered((event) => {
+    console.log(`New creator: ${event.name}`);
+    updateCreatorList(); // Update UI immediately
+});
+```
+
+### **Gas Optimization Strategies**
+
+**Concept**: Minimizing transaction costs through efficient code
+
+**Storage optimization**:
+
+- **Remove empty subscriptions**: Clean up when balance reaches zero
+- **Batch operations**: Combine multiple actions in one transaction
+- **Efficient data structures**: Use appropriate types for data
+
+**Calculation optimization**:
+
+- **Early returns**: Exit functions early when possible
+- **Minimal storage reads**: Cache values instead of repeated reads
+- **Simple math**: Use basic operations over complex calculations
+
+### **Access Control Patterns**
+
+**Concept**: Ensuring only authorized users can perform specific actions
+
+**Common patterns**:
+
+```rust
+// Only creator can add content
+let caller = self.env().caller();
+if !self.creators.contains(caller) {
+    return Err(Error::CreatorNotFound);
+}
+
+// Only subscriber can access content
+if !self.subscriptions.contains((fan, creator)) {
+    return Err(Error::SubscriptionRequired);
+}
+
+// Only subscription owner can cancel
+let fan = self.env().caller();
+let subscription_key = (fan, creator);
+```
+
+**Security benefits**:
+
+- **Prevents unauthorized actions**: Users can't perform actions they shouldn't
+- **Protects user funds**: Only rightful owners can access their money
+- **Maintains data integrity**: Only valid operations are allowed
+
+### **Fair Refund Mathematics**
+
+**Concept**: Calculating fair refunds based on actual usage time
+
+**Refund formula**:
+
+```rust
+// Calculate total time elapsed since subscription started
+let total_elapsed = current_time - subscription.start_time;
+let total_vested = (total_elapsed / 1000) * rate_per_second;
+
+// Refund = what was paid - what was used
+let refund = total_deposited - total_vested;
+```
+
+**Fairness principles**:
+
+- **Pay for usage**: Fans only pay for time they were subscribed
+- **Instant refunds**: No waiting periods or penalties
+- **Transparent calculation**: Math is public and verifiable
+- **No human bias**: Automated and consistent
+
+---
+
 This guide will help you understand each part of our Web3 application as we build it! 🚀
