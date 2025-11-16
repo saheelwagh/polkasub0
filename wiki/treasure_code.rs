@@ -234,7 +234,7 @@ mod creator_treasury_pop {
 
             // Check if this creator is already registered
             // We don't want duplicate registrations
-            if self.creators.get(caller).is_some() {
+            if self.creators.contains(caller) {
                 return Err(Error::CreatorAlreadyExists);
             }
 
@@ -305,7 +305,7 @@ mod creator_treasury_pop {
         /// - false otherwise
         #[ink(message)]
         pub fn is_creator(&self, account: ink::primitives::AccountId) -> bool {
-            self.creators.get(account).is_some()
+            self.creators.contains(account)
         }
 
         // 💰 SUBSCRIPTION MANAGEMENT FUNCTIONS
@@ -334,13 +334,13 @@ mod creator_treasury_pop {
             let payment = self.env().transferred_value();
 
             // Verify the creator exists
-            if self.creators.get(creator).is_none() {
+            if !self.creators.contains(creator) {
                 return Err(Error::CreatorNotFound);
             }
 
             // Check if fan is already subscribed to this creator
             let subscription_key = (fan, creator);
-            if self.subscriptions.get(subscription_key).is_some() {
+            if self.subscriptions.contains(subscription_key) {
                 return Err(Error::SubscriptionAlreadyExists);
             }
 
@@ -490,7 +490,7 @@ mod creator_treasury_pop {
 
             // Transfer the claimed DOT from contract to creator's wallet
             // This is the actual payment - moving tokens on the blockchain
-            if self.env().transfer(creator, claimable_amount.into()).is_err() {
+            if self.env().transfer(creator, claimable_amount).is_err() {
                 return Err(Error::TransferFailed);
             }
 
@@ -563,12 +563,12 @@ mod creator_treasury_pop {
 
             // Remove subscription from storage immediately
             // This prevents double-spending and cleans up the contract state
-            self.subscriptions.take(subscription_key);
+            self.subscriptions.remove(subscription_key);
 
             // Transfer refund to fan if there's anything to refund
             // Only attempt transfer if refund_amount > 0 to save gas
             if refund_amount > 0 {
-                if self.env().transfer(fan, refund_amount.into()).is_err() {
+                if self.env().transfer(fan, refund_amount).is_err() {
                     return Err(Error::TransferFailed);
                 }
             }
@@ -687,7 +687,7 @@ mod creator_treasury_pop {
             // Check if fan has active subscription to this creator
             // This is the core gating mechanism
             let subscription_key = (fan, creator);
-            if self.subscriptions.get(subscription_key).is_none() {
+            if !self.subscriptions.contains(subscription_key) {
                 return Err(Error::SubscriptionRequired);
             }
 
@@ -737,7 +737,7 @@ mod creator_treasury_pop {
         /// - Currently returns empty vector (TODO: implement proper iteration)
         #[ink(message)]
         pub fn get_creator_list(&self) -> Vec<(ink::primitives::AccountId, CreatorProfile)> {
-            let creators = Vec::new();
+            let mut creators = Vec::new();
 
             // TODO: Implement proper iteration over creators
             // This requires maintaining a separate list of creator addresses
@@ -753,7 +753,7 @@ mod creator_treasury_pop {
             creators
         }
     }
-    
+
     // 🧪 UNIT TESTS
     // These tests verify our contract logic works correctly
     // Run with: cargo test
@@ -793,157 +793,307 @@ mod creator_treasury_pop {
             assert_eq!(result2, Err(Error::CreatorAlreadyExists));
         }
 
-        /// Test subscription creation
-        #[ink::test]
-        fn test_subscription_creation() {
-            let mut contract = CreatorTreasuryPop::new();
-            let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+}
 
-            // Set up: Alice is creator, Bob is fan
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
-            contract.register_creator("Alice".to_string()).unwrap();
+/// Get creator's exclusive content (if caller is subscribed)
+/// This implements the content gating logic - the core value proposition
+///
+/// **Key Concept: Content Gating**
+/// This is what makes our platform valuable - exclusive content is only
+/// accessible to paying subscribers. This function enforces that rule.
+///
+/// **Access Control Flow**:
+/// 1. Check if creator exists and has content
+/// 2. Check if caller (fan) has active subscription to creator
+/// 3. If subscribed: return IPFS hash (fan can download content)
+/// 4. If not subscribed: return error (fan must subscribe first)
+///
+/// **Frontend Usage**:
+/// ```typescript
+/// try {
+///   const contentHash = await contract.query.getCreatorContent(creatorAddress);
+///   // Fan is subscribed - show content or download from IPFS
+///   displayContent(contentHash);
+/// } catch (error) {
+///   // Fan not subscribed - show subscription prompt
+///   showSubscribeButton();
+/// }
+/// ```
+///
+/// Parameters:
+/// - creator: Wallet address of creator whose content to access
+///
+/// Returns:
+/// - Ok(content_hash) if caller has active subscription
+/// - Err(SubscriptionRequired) if not subscribed
+/// - Err(CreatorNotFound) if creator doesn't exist or has no content
+#[ink(message)]
+pub fn get_creator_content(&self, creator: ink::primitives::AccountId) -> Result<String, Error> {
+    let fan = self.env().caller();
 
-            // Bob subscribes to Alice
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
-            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(
-                5_000_000_000_000,
-            ); // 5 DOT
+    // Verify creator exists and has content
+    let profile = self.creators
+        .get(creator)
+        .ok_or(Error::CreatorNotFound)?;
 
-            let result = contract.subscribe(accounts.alice, 5_000_000_000_000);
-            assert!(result.is_ok());
+    // Check if fan has active subscription to this creator
+    // This is the core gating mechanism
+    let subscription_key = (fan, creator);
+    if !self.subscriptions.contains(subscription_key) {
+        return Err(Error::SubscriptionRequired);
+    }
 
-            // Verify subscription exists
-            let subscription = contract.get_subscription(accounts.bob, accounts.alice);
-            assert!(subscription.is_ok());
-        }
+    // Return content hash if available, or error if creator hasn't uploaded content yet
+    profile.content_hash.ok_or(Error::CreatorNotFound)
+}
 
-        /// Test earnings claiming with time-based vesting
-        #[ink::test]
-        fn test_claim_earnings() {
-            let mut contract = CreatorTreasuryPop::new();
-            let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+// 📋 OPTIMIZED QUERY FUNCTIONS
+// These functions provide efficient data access for the frontend
 
-            // Set up subscription
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
-            contract.register_creator("Alice".to_string()).unwrap();
+/// Get list of all registered creators with their profiles
+/// This is used by the frontend to display the creator discovery page
+///
+/// **Key Concept: Storage Iteration Challenges**
+/// In traditional databases, you can easily "SELECT * FROM creators".
+/// In blockchain storage, iteration is more complex and expensive.
+///
+/// **Current Implementation**: 
+/// This is a placeholder that returns empty for now. In a production system,
+/// we would need to maintain a separate Vec<AccountId> of creator addresses
+/// to make iteration possible and efficient.
+///
+/// **Better Architecture** (for future implementation):
+/// ```rust
+/// // Add to storage:
+/// creator_addresses: Vec<AccountId>,
+/// 
+/// // In register_creator():
+/// self.creator_addresses.push(caller);
+/// 
+/// // In get_creator_list():
+/// let mut creators = Vec::new();
+/// for address in &self.creator_addresses {
+///     if let Some(profile) = self.creators.get(address) {
+///         creators.push((*address, profile));
+///     }
+/// }
+/// ```
+///
+/// **Gas Considerations**:
+/// - Large lists can exceed block gas limits
+/// - Consider pagination for production use
+/// - Frontend should cache results when possible
+///
+/// Returns:
+/// - Vector of (AccountId, CreatorProfile) pairs
+/// - Currently returns empty vector (TODO: implement proper iteration)
+#[ink(message)]
+pub fn get_creator_list(&self) -> Vec<(ink::primitives::AccountId, CreatorProfile)> {
+    let mut creators = Vec::new();
 
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
-            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(5_000_000_000_000);
-            contract.subscribe(accounts.alice, 5_000_000_000_000).unwrap();
+    // TODO: Implement proper iteration over creators
+    // This requires maintaining a separate list of creator addresses
+    // For now, return empty vector to avoid compilation issues
 
-            // Simulate time passing (advance block timestamp)
-            let initial_time = ink::env::test::get_block_timestamp::<ink::env::DefaultEnvironment>();
-            ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(initial_time + 3600000); // +1 hour
+    // In a full implementation, this would look like:
+    // for address in &self.creator_addresses {
+    //     if let Some(profile) = self.creators.get(address) {
+    //         creators.push((*address, profile));
+    //     }
+    // }
 
-            // Alice claims earnings
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
-            let result = contract.claim_earnings(accounts.bob);
-            assert!(result.is_ok());
+    creators
+}
 
-            let claimed_amount = result.unwrap();
-            assert!(claimed_amount > 0); // Should have vested some amount
-        }
+// 🧪 UNIT TESTS
+// These tests verify our contract logic works correctly
+// Run with: cargo test
 
-        /// Test subscription cancellation with refunds
-        #[ink::test]
-        fn test_cancel_subscription() {
-            let mut contract = CreatorTreasuryPop::new();
-            let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-            // Set up subscription
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
-            contract.register_creator("Alice".to_string()).unwrap();
+    /// Test that creators can register successfully
+    #[ink::test]
+    fn test_creator_registration() {
+        let mut contract = CreatorTreasuryPop::new();
 
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
-            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(5_000_000_000_000);
-            contract.subscribe(accounts.alice, 5_000_000_000_000).unwrap();
+        // Register a creator
+        let result = contract.register_creator("Alice".to_string());
+        assert!(result.is_ok());
 
-            // Simulate some time passing
-            let initial_time = ink::env::test::get_block_timestamp::<ink::env::DefaultEnvironment>();
-            ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(initial_time + 1800000); // +30 minutes
+        // Verify creator count increased
+        assert_eq!(contract.get_creator_count(), 1);
 
-            // Bob cancels subscription
-            let result = contract.cancel_subscription(accounts.alice);
-            assert!(result.is_ok());
+        // Verify creator exists
+        let alice = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>().alice;
+        assert!(contract.is_creator(alice));
+    }
 
-            let refund_amount = result.unwrap();
-            assert!(refund_amount > 0); // Should get partial refund
+    /// Test that duplicate registration fails
+    #[ink::test]
+    fn test_duplicate_registration_fails() {
+        let mut contract = CreatorTreasuryPop::new();
 
-            // Verify subscription is removed
-            let subscription = contract.get_subscription(accounts.bob, accounts.alice);
-            assert!(subscription.is_err());
-        }
+        // Register creator once
+        let result1 = contract.register_creator("Alice".to_string());
+        assert!(result1.is_ok());
 
-        /// Test content management and gating
-        #[ink::test]
-        fn test_content_gating() {
-            let mut contract = CreatorTreasuryPop::new();
-            let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+        // Try to register again - should fail
+        let result2 = contract.register_creator("Alice Again".to_string());
+        assert_eq!(result2, Err(Error::CreatorAlreadyExists));
+    }
 
-            // Alice registers as creator and adds content
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
-            contract.register_creator("Alice".to_string()).unwrap();
+    /// Test subscription creation
+    #[ink::test]
+    fn test_subscription_creation() {
+        let mut contract = CreatorTreasuryPop::new();
+        let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
 
-            let content_hash = "QmX7M9CiYXjVQX8Z2HvjKq4XvLqWjAoKGmhq9F3nR8sT4u".to_string();
-            let result = contract.add_exclusive_content(content_hash.clone());
-            assert!(result.is_ok());
+        // Set up: Alice is creator, Bob is fan
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
+        contract.register_creator("Alice".to_string()).unwrap();
 
-            // Bob tries to access content without subscription - should fail
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
-            let content_result = contract.get_creator_content(accounts.alice);
-            assert_eq!(content_result, Err(Error::SubscriptionRequired));
+        // Bob subscribes to Alice
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
+        ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(
+            5_000_000_000_000,
+        ); // 5 DOT
 
-            // Bob subscribes to Alice
-            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(5_000_000_000_000);
-            contract.subscribe(accounts.alice, 5_000_000_000_000).unwrap();
+        let result = contract.subscribe(accounts.alice, 5_000_000_000_000);
+        assert!(result.is_ok());
 
-            // Now Bob can access content
-            let content_result = contract.get_creator_content(accounts.alice);
-            assert!(content_result.is_ok());
-            assert_eq!(content_result.unwrap(), content_hash);
-        }
+        // Verify subscription exists
+        let subscription = contract.get_subscription(accounts.bob, accounts.alice);
+        assert!(subscription.is_ok());
+    }
 
-        /// Test access control - only creators can add content
-        #[ink::test]
-        fn test_content_access_control() {
-            let mut contract = CreatorTreasuryPop::new();
-            let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+    /// Test earnings claiming with time-based vesting
+    #[ink::test]
+    fn test_claim_earnings() {
+        let mut contract = CreatorTreasuryPop::new();
+        let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
 
-            // Bob (not a creator) tries to add content - should fail
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
-            let content_hash = "QmX7M9CiYXjVQX8Z2HvjKq4XvLqWjAoKGmhq9F3nR8sT4u".to_string();
-            let result = contract.add_exclusive_content(content_hash);
-            assert_eq!(result, Err(Error::CreatorNotFound));
-        }
+        // Set up subscription
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
+        contract.register_creator("Alice".to_string()).unwrap();
 
-        /// Test vesting math accuracy
-        #[ink::test]
-        fn test_vesting_calculations() {
-            let mut contract = CreatorTreasuryPop::new();
-            let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
+        ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(5_000_000_000_000);
+        contract.subscribe(accounts.alice, 5_000_000_000_000).unwrap();
 
-            // Set up subscription with known values
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
-            contract.register_creator("Alice".to_string()).unwrap();
+        // Simulate time passing (advance block timestamp)
+        let initial_time = ink::env::test::get_block_timestamp::<ink::env::DefaultEnvironment>();
+        ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(initial_time + 3600000); // +1 hour
 
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
-            let monthly_rate = 2_592_000_000_000u128; // Exactly 2,592,000 Planck (for easy math)
-            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(monthly_rate);
-            contract.subscribe(accounts.alice, monthly_rate).unwrap();
+        // Alice claims earnings
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
+        let result = contract.claim_earnings(accounts.bob);
+        assert!(result.is_ok());
 
-            // Verify rate_per_second calculation
-            let subscription = contract.get_subscription(accounts.bob, accounts.alice).unwrap();
-            let expected_rate_per_second = monthly_rate / (30 * 24 * 60 * 60); // Should be 1 Planck/second
-            assert_eq!(subscription.rate_per_second, expected_rate_per_second);
+        let claimed_amount = result.unwrap();
+        assert!(claimed_amount > 0); // Should have vested some amount
+    }
 
-            // Simulate exactly 1000 seconds passing
-            let initial_time = ink::env::test::get_block_timestamp::<ink::env::DefaultEnvironment>();
-            ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(initial_time + 1_000_000); // +1000 seconds
+    /// Test subscription cancellation with refunds
+    #[ink::test]
+    fn test_cancel_subscription() {
+        let mut contract = CreatorTreasuryPop::new();
+        let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
 
-            // Alice claims - should get exactly 1000 Planck
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
-            let claimed = contract.claim_earnings(accounts.bob).unwrap();
-            assert_eq!(claimed, 1000); // 1000 seconds * 1 Planck/second
-        }
+        // Set up subscription
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
+        contract.register_creator("Alice".to_string()).unwrap();
+
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
+        ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(5_000_000_000_000);
+        contract.subscribe(accounts.alice, 5_000_000_000_000).unwrap();
+
+        // Simulate some time passing
+        let initial_time = ink::env::test::get_block_timestamp::<ink::env::DefaultEnvironment>();
+        ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(initial_time + 1800000); // +30 minutes
+
+        // Bob cancels subscription
+        let result = contract.cancel_subscription(accounts.alice);
+        assert!(result.is_ok());
+
+        let refund_amount = result.unwrap();
+        assert!(refund_amount > 0); // Should get partial refund
+
+        // Verify subscription is removed
+        let subscription = contract.get_subscription(accounts.bob, accounts.alice);
+        assert!(subscription.is_err());
+    }
+
+    /// Test content management and gating
+    #[ink::test]
+    fn test_content_gating() {
+        let mut contract = CreatorTreasuryPop::new();
+        let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+
+        // Alice registers as creator and adds content
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
+        contract.register_creator("Alice".to_string()).unwrap();
+
+        let content_hash = "QmX7M9CiYXjVQX8Z2HvjKq4XvLqWjAoKGmhq9F3nR8sT4u".to_string();
+        let result = contract.add_exclusive_content(content_hash.clone());
+        assert!(result.is_ok());
+
+        // Bob tries to access content without subscription - should fail
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
+        let content_result = contract.get_creator_content(accounts.alice);
+        assert_eq!(content_result, Err(Error::SubscriptionRequired));
+
+        // Bob subscribes to Alice
+        ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(5_000_000_000_000);
+        contract.subscribe(accounts.alice, 5_000_000_000_000).unwrap();
+
+        // Now Bob can access content
+        let content_result = contract.get_creator_content(accounts.alice);
+        assert!(content_result.is_ok());
+        assert_eq!(content_result.unwrap(), content_hash);
+    }
+
+    /// Test access control - only creators can add content
+    #[ink::test]
+    fn test_content_access_control() {
+        let mut contract = CreatorTreasuryPop::new();
+        let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+
+        // Bob (not a creator) tries to add content - should fail
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
+        let content_hash = "QmX7M9CiYXjVQX8Z2HvjKq4XvLqWjAoKGmhq9F3nR8sT4u".to_string();
+        let result = contract.add_exclusive_content(content_hash);
+        assert_eq!(result, Err(Error::CreatorNotFound));
+    }
+
+    /// Test vesting math accuracy
+    #[ink::test]
+    fn test_vesting_calculations() {
+        let mut contract = CreatorTreasuryPop::new();
+        let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+
+        // Set up subscription with known values
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
+        contract.register_creator("Alice".to_string()).unwrap();
+
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
+        let monthly_rate = 2_592_000_000_000u128; // Exactly 2,592,000 Planck (for easy math)
+        ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(monthly_rate);
+        contract.subscribe(accounts.alice, monthly_rate).unwrap();
+
+        // Verify rate_per_second calculation
+        let subscription = contract.get_subscription(accounts.bob, accounts.alice).unwrap();
+        let expected_rate_per_second = monthly_rate / (30 * 24 * 60 * 60); // Should be 1 Planck/second
+        assert_eq!(subscription.rate_per_second, expected_rate_per_second);
+
+        // Simulate exactly 1000 seconds passing
+        let initial_time = ink::env::test::get_block_timestamp::<ink::env::DefaultEnvironment>();
+        ink::env::test::set_block_timestamp::<ink::env::DefaultEnvironment>(initial_time + 1_000_000); // +1000 seconds
+
+        // Alice claims - should get exactly 1000 Planck
+        ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.alice);
+        let claimed = contract.claim_earnings(accounts.bob).unwrap();
+        assert_eq!(claimed, 1000); // 1000 seconds * 1 Planck/second
     }
 }

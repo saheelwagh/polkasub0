@@ -1,31 +1,27 @@
 [package]
 name = "creator_treasury_pop"
-version = "0.1.0"
-authors = ["[your_name] <[your_email]>"]
-edition = "2024"
+version = "6.0.0-alpha"
+authors = ["Use Ink <ink@use.ink>"]
+edition = "2021"
+publish = false
 
 [dependencies]
-ink = { version = "6.0.0-beta", default-features = false, features = ["unstable-hostfn"] }
+ink = { git = "https://github.com/use-ink/ink", tag = "v6.0.0-alpha", default-features = false }
 
 [dev-dependencies]
-ink_e2e = { version = "6.0.0-beta" }
+ink_e2e = { git = "https://github.com/use-ink/ink", tag = "v6.0.0-alpha", features = [
+    "sandbox",
+] }
+hex = { version = "0.4.3" }
 
 [lib]
 path = "lib.rs"
 
 [features]
 default = ["std"]
-std = [
-    "ink/std",
-]
+std = ["ink/std"]
 ink-as-dependency = []
 e2e-tests = []
 
 [package.metadata.ink-lang]
 abi = "ink"
-
-[lints.rust.unexpected_cfgs]
-level = "warn"
-check-cfg = [
-    'cfg(ink_abi, values("ink", "sol", "all"))'
-]

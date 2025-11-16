@@ -107,6 +107,35 @@ let vested_amount = time_elapsed * rate_per_second;
 creators: Mapping<AccountId, CreatorProfile>           // Creator profiles
 subscriptions: Mapping<(AccountId, AccountId), Subscription> // Fan → Creator subscriptions
 creator_count: u32                                     // Platform statistics
+above You’re looking at how the contract’s on-chain storage is structured:
+
+creators: Mapping<AccountId, CreatorProfile>
+Think: a hashmap/dictionary on-chain.
+Key: AccountId → a wallet address (creator’s address).
+Value:
+CreatorProfile
+ → struct with fields like name, content_hash, total_earned, created_at.
+Effectively:
+“For this creator address, give me their profile.”
+subscriptions: Mapping<(AccountId, AccountId), Subscription>
+This is a mapping with a tuple key: (fan, creator).
+Key: (fan_account, creator_account)
+Value:
+Subscription
+ → struct with total_deposited, rate_per_second, last_claim_time, start_time.
+Effectively:
+“For this fan–creator pair, give me their subscription details.”
+Using (AccountId, AccountId) ensures each fan can have at most one subscription per creator, and it’s easy to look it up.
+creator_count: u32
+Simple counter of how many creators are registered.
+Used for stats or pagination helpers (e.g. “there are 42 creators on the platform”).
+So in plain language:
+
+One table for who the creators are (
+creators
+)
+One table for who is subscribed to whom, including payment details (subscriptions)
+One number tracking how many creators exist (creator_count)
 ```
 
 ### **Access Control**:
