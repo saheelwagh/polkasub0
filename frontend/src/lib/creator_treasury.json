@@ -1,0 +1,1842 @@
+{
+  "source": {
+    "hash": "0x0ba196b5dd008e95fad8ee9169d976fa6327a4c7b916e6a4dd29a0ce60a6040a",
+    "language": "ink! 6.0.0-alpha",
+    "compiler": "rustc 1.91.1",
+    "build_info": {
+      "rust_toolchain": "stable-aarch64-apple-darwin",
+      "cargo_contract_version": "6.0.0-beta",
+      "build_mode": "Release"
+    }
+  },
+  "contract": {
+    "name": "creator_treasury",
+    "version": "6.0.0-alpha",
+    "authors": [
+      "Creator Treasury Team"
+    ]
+  },
+  "image": null,
+  "version": 6,
+  "types": [
+    {
+      "id": 0,
+      "type": {
+        "def": {
+          "primitive": "str"
+        }
+      }
+    },
+    {
+      "id": 1,
+      "type": {
+        "def": {
+          "primitive": "u128"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": {
+        "def": {
+          "primitive": "u64"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": {
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ],
+        "params": [
+          {
+            "name": "K",
+            "type": 4
+          },
+          {
+            "name": "V",
+            "type": 7
+          },
+          {
+            "name": "KeyType",
+            "type": 9
+          }
+        ],
+        "def": {
+          "composite": {}
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": {
+        "path": [
+          "primitive_types",
+          "H160"
+        ],
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 5,
+                "typeName": "[u8; 20]"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": {
+        "def": {
+          "array": {
+            "len": 20,
+            "type": 6
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": {
+        "def": {
+          "primitive": "u8"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": {
+        "path": [
+          "creator_treasury",
+          "CreatorProfile"
+        ],
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "name",
+                "type": 0,
+                "typeName": "String"
+              },
+              {
+                "name": "content_hash",
+                "type": 8,
+                "typeName": "Option<String>"
+              },
+              {
+                "name": "total_earned",
+                "type": 1,
+                "typeName": "u128"
+              },
+              {
+                "name": "created_at",
+                "type": 2,
+                "typeName": "u64"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": {
+        "path": [
+          "Option"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 0
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "None",
+                "index": 0
+              },
+              {
+                "name": "Some",
+                "fields": [
+                  {
+                    "type": 0
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": {
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ],
+        "params": [
+          {
+            "name": "L",
+            "type": 10
+          },
+          {
+            "name": "R",
+            "type": 11
+          }
+        ],
+        "def": {
+          "composite": {}
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": {
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "AutoKey"
+        ],
+        "def": {
+          "composite": {}
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": {
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ],
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 12
+          }
+        ],
+        "def": {
+          "composite": {}
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": {
+        "def": {
+          "tuple": []
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": {
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ],
+        "params": [
+          {
+            "name": "K",
+            "type": 14
+          },
+          {
+            "name": "V",
+            "type": 15
+          },
+          {
+            "name": "KeyType",
+            "type": 16
+          }
+        ],
+        "def": {
+          "composite": {}
+        }
+      }
+    },
+    {
+      "id": 14,
+      "type": {
+        "def": {
+          "tuple": [
+            4,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": {
+        "path": [
+          "creator_treasury",
+          "Subscription"
+        ],
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "total_deposited",
+                "type": 1,
+                "typeName": "u128"
+              },
+              {
+                "name": "rate_per_second",
+                "type": 1,
+                "typeName": "u128"
+              },
+              {
+                "name": "last_claim_time",
+                "type": 2,
+                "typeName": "u64"
+              },
+              {
+                "name": "start_time",
+                "type": 2,
+                "typeName": "u64"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 16,
+      "type": {
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ],
+        "params": [
+          {
+            "name": "L",
+            "type": 10
+          },
+          {
+            "name": "R",
+            "type": 17
+          }
+        ],
+        "def": {
+          "composite": {}
+        }
+      }
+    },
+    {
+      "id": 17,
+      "type": {
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ],
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 12
+          }
+        ],
+        "def": {
+          "composite": {}
+        }
+      }
+    },
+    {
+      "id": 18,
+      "type": {
+        "def": {
+          "primitive": "u32"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "type": {
+        "path": [
+          "creator_treasury",
+          "creator_treasury_pop",
+          "CreatorTreasuryPop"
+        ],
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "creators",
+                "type": 3,
+                "typeName": "<Mapping<H160, CreatorProfile> as::ink::storage::traits::\nAutoStorableHint<::ink::storage::traits::ManualKey<983154399u32, ()\n>,>>::Type"
+              },
+              {
+                "name": "subscriptions",
+                "type": 13,
+                "typeName": "<Mapping<(H160, H160), Subscription> as::ink::storage::traits::\nAutoStorableHint<::ink::storage::traits::ManualKey<1495752412u32,\n()>,>>::Type"
+              },
+              {
+                "name": "creator_count",
+                "type": 18,
+                "typeName": "<u32 as::ink::storage::traits::AutoStorableHint<::ink::storage\n::traits::ManualKey<1643954140u32, ()>,>>::Type"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 20,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 12
+          },
+          {
+            "name": "E",
+            "type": 21
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 21
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 21,
+      "type": {
+        "path": [
+          "ink_primitives",
+          "LangError"
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "CouldNotReadInput",
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 23
+          },
+          {
+            "name": "E",
+            "type": 21
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 23
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 21
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 12
+          },
+          {
+            "name": "E",
+            "type": 24
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 24
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": {
+        "path": [
+          "creator_treasury",
+          "Error"
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "CreatorAlreadyExists",
+                "index": 0
+              },
+              {
+                "name": "CreatorNotFound",
+                "index": 1
+              },
+              {
+                "name": "SubscriptionAlreadyExists",
+                "index": 2
+              },
+              {
+                "name": "SubscriptionNotFound",
+                "index": 3
+              },
+              {
+                "name": "SubscriptionRequired",
+                "index": 4
+              },
+              {
+                "name": "InsufficientPayment",
+                "index": 5
+              },
+              {
+                "name": "Overflow",
+                "index": 6
+              },
+              {
+                "name": "TransferFailed",
+                "index": 7
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 25,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 26
+          },
+          {
+            "name": "E",
+            "type": 21
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 26
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 21
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 26,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 7
+          },
+          {
+            "name": "E",
+            "type": 24
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 7
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 24
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 27,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 18
+          },
+          {
+            "name": "E",
+            "type": 21
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 18
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 21
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 28,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 29
+          },
+          {
+            "name": "E",
+            "type": 21
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 29
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 21
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 29,
+      "type": {
+        "def": {
+          "primitive": "bool"
+        }
+      }
+    },
+    {
+      "id": 30,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 31
+          },
+          {
+            "name": "E",
+            "type": 21
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 31
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 21
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 31,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 15
+          },
+          {
+            "name": "E",
+            "type": 24
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 15
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 24
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 32,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 33
+          },
+          {
+            "name": "E",
+            "type": 21
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 33
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 21
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 33,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 1
+          },
+          {
+            "name": "E",
+            "type": 24
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 1
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 24
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 34,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 35
+          },
+          {
+            "name": "E",
+            "type": 21
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 35
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 21
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 35,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 0
+          },
+          {
+            "name": "E",
+            "type": 24
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 0
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 24
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 36,
+      "type": {
+        "path": [
+          "Result"
+        ],
+        "params": [
+          {
+            "name": "T",
+            "type": 37
+          },
+          {
+            "name": "E",
+            "type": 21
+          }
+        ],
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "name": "Ok",
+                "fields": [
+                  {
+                    "type": 37
+                  }
+                ],
+                "index": 0
+              },
+              {
+                "name": "Err",
+                "fields": [
+                  {
+                    "type": 21
+                  }
+                ],
+                "index": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 37,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 38
+          }
+        }
+      }
+    },
+    {
+      "id": 38,
+      "type": {
+        "def": {
+          "tuple": [
+            4,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "id": 39,
+      "type": {
+        "path": [
+          "ink_primitives",
+          "types",
+          "AccountId"
+        ],
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 40,
+                "typeName": "[u8; 32]"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 40,
+      "type": {
+        "def": {
+          "array": {
+            "len": 32,
+            "type": 6
+          }
+        }
+      }
+    },
+    {
+      "id": 41,
+      "type": {
+        "path": [
+          "ink_primitives",
+          "types",
+          "Hash"
+        ],
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 40,
+                "typeName": "[u8; 32]"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "storage": {
+    "root": {
+      "root_key": "0x00000000",
+      "layout": {
+        "struct": {
+          "name": "CreatorTreasuryPop",
+          "fields": [
+            {
+              "name": "creators",
+              "layout": {
+                "root": {
+                  "root_key": "0xdfbe993a",
+                  "layout": {
+                    "struct": {
+                      "name": "CreatorProfile",
+                      "fields": [
+                        {
+                          "name": "name",
+                          "layout": {
+                            "leaf": {
+                              "key": "0xdfbe993a",
+                              "ty": 0
+                            }
+                          }
+                        },
+                        {
+                          "name": "content_hash",
+                          "layout": {
+                            "enum": {
+                              "name": "Option",
+                              "dispatchKey": "0xdfbe993a",
+                              "variants": {
+                                "0": {
+                                  "name": "None",
+                                  "fields": []
+                                },
+                                "1": {
+                                  "name": "Some",
+                                  "fields": [
+                                    {
+                                      "name": "0",
+                                      "layout": {
+                                        "leaf": {
+                                          "key": "0xdfbe993a",
+                                          "ty": 0
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "name": "total_earned",
+                          "layout": {
+                            "leaf": {
+                              "key": "0xdfbe993a",
+                              "ty": 1
+                            }
+                          }
+                        },
+                        {
+                          "name": "created_at",
+                          "layout": {
+                            "leaf": {
+                              "key": "0xdfbe993a",
+                              "ty": 2
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "ty": 3
+                }
+              }
+            },
+            {
+              "name": "subscriptions",
+              "layout": {
+                "root": {
+                  "root_key": "0xdc5e2759",
+                  "layout": {
+                    "struct": {
+                      "name": "Subscription",
+                      "fields": [
+                        {
+                          "name": "total_deposited",
+                          "layout": {
+                            "leaf": {
+                              "key": "0xdc5e2759",
+                              "ty": 1
+                            }
+                          }
+                        },
+                        {
+                          "name": "rate_per_second",
+                          "layout": {
+                            "leaf": {
+                              "key": "0xdc5e2759",
+                              "ty": 1
+                            }
+                          }
+                        },
+                        {
+                          "name": "last_claim_time",
+                          "layout": {
+                            "leaf": {
+                              "key": "0xdc5e2759",
+                              "ty": 2
+                            }
+                          }
+                        },
+                        {
+                          "name": "start_time",
+                          "layout": {
+                            "leaf": {
+                              "key": "0xdc5e2759",
+                              "ty": 2
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "ty": 13
+                }
+              }
+            },
+            {
+              "name": "creator_count",
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 18
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ty": 19
+    }
+  },
+  "spec": {
+    "constructors": [
+      {
+        "label": "new",
+        "selector": "0x9bae9d5e",
+        "payable": false,
+        "args": [],
+        "returnType": {
+          "type": 20,
+          "displayName": [
+            "ink_primitives",
+            "ConstructorResult"
+          ]
+        },
+        "docs": [
+          "🏁 CONSTRUCTOR - Called once when contract is deployed",
+          "This initializes the contract with empty storage",
+          "No parameters needed - we start with zero creators and subscriptions"
+        ],
+        "default": false
+      }
+    ],
+    "messages": [
+      {
+        "label": "register_creator",
+        "selector": "0x2ac24fe1",
+        "mutates": true,
+        "payable": false,
+        "args": [
+          {
+            "label": "name",
+            "type": {
+              "type": 0,
+              "displayName": [
+                "String"
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "type": 22,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Register a new creator on the platform",
+          " This is like \"signing up\" to become a content creator",
+          "",
+          " Parameters:",
+          " - name: Display name for the creator (e.g., \"Alex Chen\")",
+          "",
+          " Returns:",
+          " - Ok(()) if registration successful",
+          " - Err(CreatorAlreadyExists) if already registered"
+        ],
+        "default": false
+      },
+      {
+        "label": "get_creator_profile",
+        "selector": "0xcc8073b2",
+        "mutates": false,
+        "payable": false,
+        "args": [
+          {
+            "label": "creator",
+            "type": {
+              "type": 4,
+              "displayName": [
+                "H160"
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "type": 25,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Get profile information for a specific creator",
+          " Used to display creator details on their profile page",
+          "",
+          " Parameters:",
+          " - creator: Wallet address of the creator",
+          "",
+          " Returns:",
+          " - Ok(CreatorProfile) if creator exists",
+          " - Err(CreatorNotFound) if creator doesn't exist"
+        ],
+        "default": false
+      },
+      {
+        "label": "get_creator_count",
+        "selector": "0xf400b5f4",
+        "mutates": false,
+        "payable": false,
+        "args": [],
+        "returnType": {
+          "type": 27,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Get total number of registered creators",
+          " Used for displaying platform statistics",
+          "",
+          " Returns:",
+          " - Number of creators as u32"
+        ],
+        "default": false
+      },
+      {
+        "label": "is_creator",
+        "selector": "0xb5800e90",
+        "mutates": false,
+        "payable": false,
+        "args": [
+          {
+            "label": "account",
+            "type": {
+              "type": 4,
+              "displayName": [
+                "H160"
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "type": 28,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Check if an account is a registered creator",
+          " Used for access control and UI logic",
+          "",
+          " Parameters:",
+          " - account: Wallet address to check",
+          "",
+          " Returns:",
+          " - true if account is registered creator",
+          " - false otherwise"
+        ],
+        "default": false
+      },
+      {
+        "label": "subscribe",
+        "selector": "0xfb968a8f",
+        "mutates": true,
+        "payable": true,
+        "args": [
+          {
+            "label": "creator",
+            "type": {
+              "type": 4,
+              "displayName": [
+                "H160"
+              ]
+            }
+          },
+          {
+            "label": "monthly_rate",
+            "type": {
+              "type": 1,
+              "displayName": [
+                "u128"
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "type": 22,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Fan subscribes to a creator with monthly payment",
+          " This is the core function that starts the streaming payment relationship",
+          "",
+          " The function is marked \"payable\" which means it can receive DOT",
+          " The DOT sent with the transaction becomes the subscription balance",
+          "",
+          " Parameters:",
+          " - creator: Wallet address of creator to subscribe to",
+          " - monthly_rate: How much DOT per month (in Planck units)",
+          "",
+          " Returns:",
+          " - Ok(()) if subscription successful",
+          " - Err(...) for various failure conditions"
+        ],
+        "default": false
+      },
+      {
+        "label": "get_subscription",
+        "selector": "0x451aac70",
+        "mutates": false,
+        "payable": false,
+        "args": [
+          {
+            "label": "fan",
+            "type": {
+              "type": 4,
+              "displayName": [
+                "H160"
+              ]
+            }
+          },
+          {
+            "label": "creator",
+            "type": {
+              "type": 4,
+              "displayName": [
+                "H160"
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "type": 30,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Get subscription details between a fan and creator",
+          " Used by frontend to display subscription status",
+          "",
+          " Parameters:",
+          " - fan: Fan's wallet address",
+          " - creator: Creator's wallet address",
+          "",
+          " Returns:",
+          " - Ok(Subscription) if subscription exists",
+          " - Err(SubscriptionNotFound) if no subscription"
+        ],
+        "default": false
+      },
+      {
+        "label": "claim_earnings",
+        "selector": "0x40c864ff",
+        "mutates": true,
+        "payable": false,
+        "args": [
+          {
+            "label": "fan",
+            "type": {
+              "type": 4,
+              "displayName": [
+                "H160"
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "type": 32,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Creator claims their vested earnings from a specific fan",
+          " This implements the core \"streaming payment\" logic of our platform",
+          "",
+          " **Key Concept: Time-Based Vesting**",
+          " Instead of paying creators monthly, fans' payments \"vest\" (become claimable)",
+          " every second. This creates a smooth, continuous payment stream.",
+          "",
+          " **Vesting Formula**:",
+          " ```text",
+          " vested_amount = (current_time - last_claim_time) * rate_per_second",
+          " ```",
+          "",
+          " **Example**:",
+          " - Fan pays 5 DOT/month = 1,929 Planck/second",
+          " - After 1 hour (3600 seconds): 3600 * 1,929 = 6,944,400 Planck vested",
+          " - Creator can claim ~0.007 DOT after 1 hour",
+          "",
+          " Parameters:",
+          " - fan: Wallet address of the fan who is paying",
+          "",
+          " Returns:",
+          " - Ok(amount_claimed) if successful",
+          " - Err(...) for various failure conditions"
+        ],
+        "default": false
+      },
+      {
+        "label": "cancel_subscription",
+        "selector": "0x5089aeb6",
+        "mutates": true,
+        "payable": false,
+        "args": [
+          {
+            "label": "creator",
+            "type": {
+              "type": 4,
+              "displayName": [
+                "H160"
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "type": 32,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Fan cancels subscription and gets refund for unused time",
+          " This implements fair refunds - fans only pay for time they were subscribed",
+          "",
+          " **Key Concept: Fair Refund Calculation**",
+          " When a fan cancels, they should get back money for time they haven't used yet.",
+          " We calculate how much time has passed since subscription started, and refund",
+          " the portion that hasn't \"vested\" to the creator yet.",
+          "",
+          " **Refund Formula**:",
+          " ```text",
+          " total_vested = (current_time - start_time) * rate_per_second",
+          " refund_amount = total_deposited - total_vested",
+          " ```",
+          "",
+          " **Example**:",
+          " - Fan pays 5 DOT for 1 month subscription",
+          " - After 15 days, fan cancels",
+          " - Refund = 5 DOT - (15 days worth of vesting) = ~2.5 DOT",
+          "",
+          " Parameters:",
+          " - creator: Wallet address of creator to unsubscribe from",
+          "",
+          " Returns:",
+          " - Ok(refund_amount) if successful",
+          " - Err(...) for various failure conditions"
+        ],
+        "default": false
+      },
+      {
+        "label": "add_exclusive_content",
+        "selector": "0x27403f41",
+        "mutates": true,
+        "payable": false,
+        "args": [
+          {
+            "label": "content_hash",
+            "type": {
+              "type": 0,
+              "displayName": [
+                "String"
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "type": 22,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Creator adds exclusive content (IPFS hash)",
+          " Only registered creators can call this for their own profile",
+          "",
+          " **Key Concept: IPFS Content Storage**",
+          " We don't store actual content (videos, images, text) on the blockchain",
+          " because that would be extremely expensive. Instead, we store IPFS hashes.",
+          "",
+          " **IPFS (InterPlanetary File System)**:",
+          " - Decentralized file storage network",
+          " - Content is identified by cryptographic hash",
+          " - Immutable - content can't be changed once uploaded",
+          " - Distributed - stored across many nodes worldwide",
+          "",
+          " **Example IPFS Hash**: \"QmX7M9CiYXjVQX8Z2HvjKq4XvLqWjAoKGmhq9F3nR8sT4u\"",
+          "",
+          " **Access Pattern**:",
+          " 1. Creator uploads content to IPFS → gets hash",
+          " 2. Creator calls this function with the hash",
+          " 3. Hash is stored on blockchain (small, cheap)",
+          " 4. Fans can retrieve hash if subscribed",
+          " 5. Fans use hash to download content from IPFS",
+          "",
+          " Parameters:",
+          " - content_hash: IPFS hash pointing to the exclusive content",
+          "",
+          " Returns:",
+          " - Ok(()) if successful",
+          " - Err(CreatorNotFound) if caller is not a registered creator"
+        ],
+        "default": false
+      },
+      {
+        "label": "get_creator_content",
+        "selector": "0x1638e118",
+        "mutates": false,
+        "payable": false,
+        "args": [
+          {
+            "label": "creator",
+            "type": {
+              "type": 4,
+              "displayName": [
+                "H160"
+              ]
+            }
+          }
+        ],
+        "returnType": {
+          "type": 34,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Get creator's exclusive content (if caller is subscribed)",
+          " This implements the content gating logic - the core value proposition",
+          "",
+          " **Key Concept: Content Gating**",
+          " This is what makes our platform valuable - exclusive content is only",
+          " accessible to paying subscribers. This function enforces that rule.",
+          "",
+          " **Access Control Flow**:",
+          " 1. Check if creator exists and has content",
+          " 2. Check if caller (fan) has active subscription to creator",
+          " 3. If subscribed: return IPFS hash (fan can download content)",
+          " 4. If not subscribed: return error (fan must subscribe first)",
+          "",
+          " **Frontend Usage**:",
+          " ```typescript",
+          " try {",
+          "   const contentHash = await contract.query.getCreatorContent(creatorAddress);",
+          "   // Fan is subscribed - show content or download from IPFS",
+          "   displayContent(contentHash);",
+          " } catch (error) {",
+          "   // Fan not subscribed - show subscription prompt",
+          "   showSubscribeButton();",
+          " }",
+          " ```",
+          "",
+          " Parameters:",
+          " - creator: Wallet address of creator whose content to access",
+          "",
+          " Returns:",
+          " - Ok(content_hash) if caller has active subscription",
+          " - Err(SubscriptionRequired) if not subscribed",
+          " - Err(CreatorNotFound) if creator doesn't exist or has no content"
+        ],
+        "default": false
+      },
+      {
+        "label": "get_creator_list",
+        "selector": "0x2d943b21",
+        "mutates": false,
+        "payable": false,
+        "args": [],
+        "returnType": {
+          "type": 36,
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ]
+        },
+        "docs": [
+          " Get list of all registered creators with their profiles",
+          " This is used by the frontend to display the creator discovery page",
+          "",
+          " **Key Concept: Storage Iteration Challenges**",
+          " In traditional databases, you can easily \"SELECT * FROM creators\".",
+          " In blockchain storage, iteration is more complex and expensive.",
+          "",
+          " **Current Implementation**:",
+          " This is a placeholder that returns empty for now. In a production system,",
+          " we would need to maintain a separate Vec<AccountId> of creator addresses",
+          " to make iteration possible and efficient.",
+          "",
+          " **Better Architecture** (for future implementation):",
+          " ```text",
+          " // Add to storage:",
+          " creator_addresses: Vec<AccountId>,",
+          "",
+          " // In register_creator():",
+          " self.creator_addresses.push(caller);",
+          "",
+          " // In get_creator_list():",
+          " let mut creators = Vec::new();",
+          " for address in &self.creator_addresses {",
+          "     if let Some(profile) = self.creators.get(address) {",
+          "         creators.push((*address, profile));",
+          "     }",
+          " }",
+          " ```",
+          "",
+          " **Gas Considerations**:",
+          " - Large lists can exceed block gas limits",
+          " - Consider pagination for production use",
+          " - Frontend should cache results when possible",
+          "",
+          " Returns:",
+          " - Vector of (AccountId, CreatorProfile) pairs",
+          " - Currently returns empty vector (TODO: implement proper iteration)"
+        ],
+        "default": false
+      }
+    ],
+    "events": [],
+    "docs": [],
+    "lang_error": {
+      "type": 21,
+      "displayName": [
+        "ink",
+        "LangError"
+      ]
+    },
+    "environment": {
+      "accountId": {
+        "type": 39,
+        "displayName": [
+          "AccountId"
+        ]
+      },
+      "balance": {
+        "type": 1,
+        "displayName": [
+          "Balance"
+        ]
+      },
+      "hash": {
+        "type": 41,
+        "displayName": [
+          "Hash"
+        ]
+      },
+      "timestamp": {
+        "type": 2,
+        "displayName": [
+          "Timestamp"
+        ]
+      },
+      "blockNumber": {
+        "type": 18,
+        "displayName": [
+          "BlockNumber"
+        ]
+      },
+      "nativeToEthRatio": 100000000,
+      "staticBufferSize": 16384
+    }
+  }
+}

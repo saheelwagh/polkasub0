@@ -6,14 +6,21 @@ import { Button } from "@/components/ui/button-extended"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+// import { Textarea } from "@/components/ui/textarea" // Component not found, using regular textarea
 import { Badge } from "@/components/ui/badge"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { CheckCircle, User, FileText, DollarSign, Upload, Wallet } from "lucide-react"
+import { useAccounts } from "@reactive-dot/react"
+import { useSignerAndAddress } from "@/hooks/use-signer-and-address"
+import { CreatorTreasuryContract } from "@/lib/contract"
+import { toast } from "sonner"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const accounts = useAccounts()
+  const { signer, signerAddress } = useSignerAndAddress()
+  
   const [formData, setFormData] = useState({
     name: "",
     bio: "",
@@ -25,8 +32,21 @@ export default function RegisterPage() {
   })
   const [currentTag, setCurrentTag] = useState("")
   const [isRegistering, setIsRegistering] = useState(false)
-  const [isConnected, setIsConnected] = useState(false)
-  const [walletAddress, setWalletAddress] = useState("")
+  const [contract, setContract] = useState<CreatorTreasuryContract | null>(null)
+  
+  // Initialize contract
+  useEffect(() => {
+    const initContract = async () => {
+      const contractInstance = new CreatorTreasuryContract()
+      const success = await contractInstance.initialize()
+      if (success) {
+        setContract(contractInstance)
+      } else {
+        toast.error("Failed to connect to contract")
+      }
+    }
+    initContract()
+  }, [])
 
   const availableTags = [
     "Web3", "Polkadot", "Tutorials", "DeFi", "Research", "Analysis", 
@@ -34,42 +54,62 @@ export default function RegisterPage() {
     "Education", "Beginner", "Blockchain", "NFTs", "Art", "Digital"
   ]
 
-  const handleConnectWallet = async () => {
-    // Simulate wallet connection
-    setIsConnected(true)
-    setWalletAddress("0x1234567890abcdef1234567890abcdef12345678")
-  }
-
-  const handleAddTag = (tag: string) => {
-    if (tag && !formData.tags.includes(tag) && formData.tags.length < 5) {
+  const addTag = (tag: string) => {
+    if (tag && !formData.tags.includes(tag)) {
       setFormData(prev => ({
         ...prev,
         tags: [...prev.tags, tag]
       }))
-      setCurrentTag("")
     }
   }
 
-  const handleRemoveTag = (tagToRemove: string) => {
+  const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }))
   }
 
+  const handleAddTag = (tag: string) => {
+    addTag(tag)
+    setCurrentTag("")
+  }
+
+  const handleRemoveTag = (tag: string) => {
+    removeTag(tag)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isConnected) return
+    if (!signerAddress || !signer || !contract) {
+      toast.error("Please connect your wallet and wait for contract initialization")
+      return
+    }
 
     setIsRegistering(true)
     
-    // Simulate registration process
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    
-    // Redirect to dashboard after successful registration
-    router.push('/dashboard')
+    try {
+      toast.info("Registering creator on blockchain...")
+      
+      // Call the contract to register creator
+      const result = await contract.registerCreator(formData.name, signerAddress, signer)
+      
+      if (result.success) {
+        toast.success("Creator registration successful!")
+        // Redirect to dashboard after successful registration
+        router.push('/dashboard')
+      } else {
+        throw new Error("Registration failed")
+      }
+    } catch (error) {
+      console.error("Registration error:", error)
+      toast.error("Registration failed. Please try again.")
+    } finally {
+      setIsRegistering(false)
+    }
   }
 
+  const isConnected = !!signerAddress
   const isFormValid = formData.name && formData.bio && formData.monthlyRate && isConnected
 
   return (
@@ -110,14 +150,11 @@ export default function RegisterPage() {
                         Wallet Connection
                       </Label>
                       {!isConnected ? (
-                        <Button 
-                          type="button"
-                          onClick={handleConnectWallet}
-                          variant="outline"
-                          className="w-full"
-                        >
-                          Connect Polkadot Wallet
-                        </Button>
+                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-sm text-yellow-700">
+                            Please connect your Polkadot wallet using the navbar to register as a creator.
+                          </p>
+                        </div>
                       ) : (
                         <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                           <div className="flex items-center gap-2 text-green-700">
@@ -125,7 +162,7 @@ export default function RegisterPage() {
                             <span className="font-medium">Wallet Connected</span>
                           </div>
                           <p className="text-sm text-green-600 mt-1 font-mono">
-                            {walletAddress}
+                            {signerAddress}
                           </p>
                         </div>
                       )}
@@ -161,13 +198,14 @@ export default function RegisterPage() {
                     {/* Bio */}
                     <div className="space-y-2">
                       <Label htmlFor="bio">Bio *</Label>
-                      <Textarea
+                      <textarea
                         id="bio"
                         placeholder="Tell potential subscribers about yourself and your content..."
                         rows={4}
                         value={formData.bio}
                         onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                         disabled={!isConnected}
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     </div>
 

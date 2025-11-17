@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { siteMetadata } from "@/lib/metadata"
 import { cn } from "../lib/utils"
 import { fontStyles } from "../styles/fonts"
+import { ClientReactiveDotProvider } from "@/components/providers/reactive-dot-provider"
 
 import "../styles/globals.css"
 import "../lib/crypto-polyfill"
@@ -17,10 +18,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" dir="ltr" className={cn(fontStyles)} suppressHydrationWarning>
-      <body className="relative flex h-full min-h-screen flex-col">
+      <body className="relative flex h-full min-h-screen flex-col" suppressHydrationWarning>
         <Toaster position="top-center" closeButton />
 
-        <TooltipProvider>{children}</TooltipProvider>
+        <ClientReactiveDotProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </ClientReactiveDotProvider>
       </body>
     </html>
   )
