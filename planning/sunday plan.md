@@ -1,3 +1,0 @@
-- Explain curation process on separate page
-- focus on the certification part
--

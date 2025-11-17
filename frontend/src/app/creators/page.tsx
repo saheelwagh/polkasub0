@@ -8,6 +8,7 @@ import Link from "next/link"
 import { Users, DollarSign, CheckCircle } from "lucide-react"
 
 // Mock creator data
+//TODO: Replace with real data in blockchain
 const mockCreators = [
   {
     id: "0x1234567890abcdef",
@@ -145,7 +146,7 @@ export default function CreatorsPage() {
                 <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    <span>{creator.subscribers} subscribers</span>
+                    <span>{creator.subscribers} Subscribers</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <DollarSign className="w-4 h-4" />
@@ -155,7 +156,7 @@ export default function CreatorsPage() {
 
                 {/* Content Count */}
                 <p className="text-sm text-muted-foreground mb-4">
-                  {creator.contentCount} exclusive content pieces
+                  {creator.contentCount} Exclusive content pieces
                 </p>
 
                 {/* Action Button */}
@@ -167,7 +168,7 @@ export default function CreatorsPage() {
                   </Button>
                 ) : (
                   <Button disabled className="w-full">
-                    Coming Soon
+                    Coming Soon...
                   </Button>
                 )}
 
