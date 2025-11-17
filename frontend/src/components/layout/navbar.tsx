@@ -5,6 +5,7 @@ import { ButtonSkeleton } from "@/components/layout/skeletons"
 import { AccountSelect } from "@/components/web3/account-select"
 import { ChainSelect } from "@/components/web3/chain-select"
 import { AccountBalance } from "@/components/web3/account-balance"
+import { MapAccountButton } from "@/components/web3/map-account-button"
 import { useWalletContext } from "@/components/providers/wallet-context"
 import Link from "next/link"
 import { Logo } from "./logo"
@@ -60,6 +61,11 @@ export function Navbar() {
             {/* Account Balance */}
             <Suspense fallback={<div className="w-20 h-8"></div>}>
               <AccountBalance />
+            </Suspense>
+
+            {/* Map Account Button */}
+            <Suspense fallback={<ButtonSkeleton />}>
+              <MapAccountButton />
             </Suspense>
 
             {/* Connect Button */}

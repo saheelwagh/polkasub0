@@ -41,47 +41,39 @@ export class CreatorTreasuryContract {
   
   // Query methods (free, no gas)
   async getCreatorProfile(address: string) {
-    if (!this.contract || !this.sdk) throw new Error('Contract not initialized')
+    // TEMPORARY: Mock creator profile from localStorage
+    console.log('📋 Getting creator profile (mock):', address)
     
     try {
-      // Use pre-mapped Alice account for queries (workaround for unmapped accounts)
-      const ALICE = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
-      
-      // Check if Alice is mapped, if not, use storage directly
-      const isAliceMapped = await this.sdk.addressIsMapped(ALICE)
-      if (isAliceMapped) {
-        const result = await this.contract.query("get_creator_profile", { origin: ALICE }, address)
-        return result.success ? result.value.response : null
-      } else {
-        console.warn('Using storage fallback for getCreatorProfile - Alice not mapped')
-        // For now, return null - we'll implement storage queries later
-        return null
+      const mockCreatorData = localStorage.getItem(`creator_${address}`)
+      if (mockCreatorData) {
+        const profile = JSON.parse(mockCreatorData)
+        console.log('✅ Mock creator profile:', profile)
+        return {
+          name: profile.name,
+          total_earned: profile.totalEarned,
+          content_hash: profile.contentHash,
+          created_at: profile.createdAt
+        }
       }
+      return null
     } catch (error) {
-      console.error('Query failed:', error)
+      console.error('Mock profile retrieval failed:', error)
       return null
     }
   }
   
   async isCreator(address: string): Promise<boolean> {
-    if (!this.contract) throw new Error('Contract not initialized')
+    // TEMPORARY: Mock creator check using localStorage
+    console.log('🔍 Checking if creator exists (mock):', address)
     
     try {
-      console.log('🔍 Checking if creator exists:', address)
-      
-      // Use direct storage access instead of contract queries
-      // This avoids the account mapping requirement
-      const storageResult = await this.contract.getStorage()
-      console.log('📦 Storage result:', storageResult)
-      
-      // For now, we'll assume the user is not a creator and let the transaction fail
-      // with a proper error message if they're already registered
-      // This is a temporary workaround until we can properly read storage
-      console.warn('⚠️ Using fallback: assuming user is not a creator')
-      return false
-      
+      const mockCreator = localStorage.getItem(`creator_${address}`)
+      const exists = !!mockCreator
+      console.log('✅ Mock creator check result:', exists)
+      return exists
     } catch (error) {
-      console.error('Query failed:', error)
+      console.error('Mock creator check failed:', error)
       return false
     }
   }
@@ -135,19 +127,54 @@ export class CreatorTreasuryContract {
   
   // Transaction methods (cost gas)
   async registerCreator(name: string, signerAddress: string, signer: any) {
+    // TEMPORARY: Mock registration until contract is properly deployed
+    console.log('🚧 Using mock registration (contract deployment issue)')
+    
+    // Simulate contract call delay
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Store registration in localStorage as mock
+    const mockCreator = {
+      name,
+      address: signerAddress,
+      totalEarned: 0,
+      createdAt: Date.now(),
+      contentHash: null
+    }
+    
+    localStorage.setItem(`creator_${signerAddress}`, JSON.stringify(mockCreator))
+    console.log('✅ Mock creator registered:', mockCreator)
+    
+    return { success: true, result: { ok: true } }
+    
+    /* REAL CONTRACT CODE (commented out until deployment fixed)
     if (!this.contract || !this.sdk) throw new Error('Contract not initialized')
     
     try {
       console.log('🔄 Registering creator:', name, 'from:', signerAddress)
       
+      // Check contract deployment info
+      console.log('📋 Contract deployment info:', {
+        chainId: this.chainId,
+        hasContract: !!this.contract,
+        hasSdk: !!this.sdk
+      })
+      
       // Check if account is mapped (required for ink! contracts)
       const isMapped = await this.sdk.addressIsMapped(signerAddress)
+      console.log('🗺️ Account mapping check result:', isMapped)
       if (!isMapped) {
         throw new Error("Account not mapped. Please map your account first using the Map Account button.")
       }
       
       // Note: We'll let the contract handle duplicate registration checks
       // since our query methods aren't working properly yet
+      
+      console.log('📤 Sending transaction with params:', {
+        method: 'register_creator',
+        origin: signerAddress,
+        args: [name]
+      })
       
       // Send transaction using the correct API
       const tx = this.contract
@@ -162,22 +189,51 @@ export class CreatorTreasuryContract {
       
       if (!result.ok) {
         console.error('❌ Transaction dispatch error:', result.dispatchError)
+        console.error('❌ Result.ok:', result.ok)
+        console.error('❌ Result keys:', Object.keys(result))
+        
+        // Check events for more detailed error information
+        if (result.events && Array.isArray(result.events)) {
+          console.error('❌ Transaction events:', result.events.length, 'events found')
+          console.error('❌ Events contain data but cannot be serialized (likely BigInt issue)')
+        }
+        
+        // Check if we have txHash and block info
+        if (result.txHash) {
+          console.error('❌ Transaction hash:', result.txHash)
+        }
+        if (result.block) {
+          console.error('❌ Block info:', result.block)
+        }
         
         // Try to provide more helpful error messages
         let errorMessage = "Transaction failed"
-        if (result.dispatchError && typeof result.dispatchError === 'object') {
+        
+        // Handle empty or undefined dispatch error
+        if (!result.dispatchError || Object.keys(result.dispatchError).length === 0) {
+          errorMessage = "Transaction failed with empty error. Common causes:\n" +
+            "• Insufficient balance (need ~0.02 DOT for gas)\n" +
+            "• Account not properly mapped\n" +
+            "• Contract method not found\n" +
+            "• Invalid parameters\n" +
+            "Please check your balance and try again."
+        } else if (result.dispatchError && typeof result.dispatchError === 'object') {
           if (result.dispatchError.type === 'Module' && result.dispatchError.value) {
             const moduleError = result.dispatchError.value
             if (moduleError.error === 0) {
               errorMessage = "Creator already exists - you are already registered!"
             } else {
-              errorMessage = `Contract error: ${moduleError.error} (index: ${moduleError.index})`
+              errorMessage = `Contract error: ${moduleError.error || 'unknown'} (index: ${moduleError.index || 'unknown'})`
             }
           } else if (result.dispatchError.type) {
             errorMessage = `Blockchain error: ${result.dispatchError.type}`
+          } else {
+            errorMessage = `Unknown dispatch error: ${String(result.dispatchError)}`
           }
         } else if (result.dispatchError) {
           errorMessage = `Transaction error: ${String(result.dispatchError)}`
+        } else {
+          errorMessage = "Transaction failed with unknown error - check console for details"
         }
         
         throw new Error(errorMessage, { cause: result.dispatchError })
@@ -188,6 +244,7 @@ export class CreatorTreasuryContract {
       console.error('❌ Registration failed:', error)
       throw error
     }
+    */
   }
 }
 

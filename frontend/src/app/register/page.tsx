@@ -15,6 +15,7 @@ import { useAccounts, useClient, useChainId } from "@reactive-dot/react"
 import { useSignerAndAddress } from "@/hooks/use-signer-and-address"
 import { useWalletContext } from "@/components/providers/wallet-context"
 import { CreatorTreasuryContract } from "@/lib/contract"
+import { MapAccountDebug } from "@/components/web3/map-account-debug"
 import { toast } from "sonner"
 
 export default function RegisterPage() {
@@ -224,6 +225,17 @@ export default function RegisterPage() {
                         </div>
                       )}
                     </div>
+
+                    {/* Account Mapping Status */}
+                    {isConnected && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          Account Mapping (Required for Transactions)
+                        </Label>
+                        <MapAccountDebug />
+                      </div>
+                    )}
 
                     {/* Basic Info */}
                     <div className="grid md:grid-cols-2 gap-4">
