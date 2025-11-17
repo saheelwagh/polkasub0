@@ -10,6 +10,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { useState, useEffect } from "react"
+import { useClient, useChainId } from "@reactive-dot/react"
+import { useSignerAndAddress } from "@/hooks/use-signer-and-address"
+import { useWalletContext } from "@/components/providers/wallet-context"
+import { CreatorTreasuryContract } from "@/lib/contract"
+import { toast } from "sonner"
 import { 
   DollarSign, 
   Users, 
@@ -21,7 +26,8 @@ import {
   Wallet,
   ExternalLink,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from "lucide-react"
 
 // Mock creator data
@@ -99,15 +105,98 @@ const mockContent = [
 ]
 
 export default function DashboardPage() {
-  const [streamingEarnings, setStreamingEarnings] = useState(1250.75)
-  const [newContent, setNewContent] = useState({
-    title: "",
-    description: "",
-    ipfsHash: "",
-    type: "Tutorial"
-  })
-  const [isUploading, setIsUploading] = useState(false)
+  const [activeTab, setActiveTab] = useState("overview")
+  const [newContent, setNewContent] = useState({ title: "", description: "", file: null, type: "", ipfsHash: "" })
+  
+  // Contract integration
+  const client = useClient()
+  const chainId = useChainId()
+  const { signer, signerAddress } = useSignerAndAddress()
+  const { account } = useWalletContext()
+  const [contract, setContract] = useState<CreatorTreasuryContract | null>(null)
+  
+  // Real creator data state
+  const [creatorData, setCreatorData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isCreator, setIsCreator] = useState(false)
   const [isClaiming, setIsClaiming] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  
+  // Get wallet address from either source
+  const walletAddress = signerAddress || account?.address
+  
+  // Initialize contract
+  useEffect(() => {
+    const initContract = async () => {
+      if (!client || !chainId) return
+      
+      console.log("🔗 Initializing dashboard contract...")
+      const contractInstance = new CreatorTreasuryContract(client, chainId)
+      const success = await contractInstance.initialize()
+      if (success) {
+        setContract(contractInstance)
+        console.log("✅ Dashboard contract initialized")
+      } else {
+        console.error("❌ Dashboard contract initialization failed")
+        toast.error("Failed to connect to contract")
+      }
+    }
+    initContract()
+  }, [client, chainId])
+  
+  // Load creator data
+  useEffect(() => {
+    const loadCreatorData = async () => {
+      if (!contract || !walletAddress) return
+      
+      setIsLoading(true)
+      try {
+        console.log("📊 Loading creator data for:", walletAddress)
+        
+        // Check if user is a registered creator
+        const creatorStatus = await contract.isCreator(walletAddress)
+        setIsCreator(creatorStatus)
+        
+        if (creatorStatus) {
+          // Get creator profile
+          const profile = await contract.getCreatorProfile(walletAddress)
+          
+          if (profile) {
+            setCreatorData({
+              name: profile.name || "Unknown Creator",
+              address: walletAddress,
+              totalEarned: profile.total_earned || 0,
+              contentHash: profile.content_hash,
+              createdAt: profile.created_at,
+              // Mock data for now (will be replaced with real subscription queries)
+              subscribers: 0,
+              contentCount: profile.content_hash ? 1 : 0,
+              monthlyRate: 5, // Default rate
+              avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${walletAddress}`,
+              joinedDate: new Date(profile.created_at || Date.now()).toLocaleDateString()
+            })
+            console.log("✅ Creator profile loaded:", profile)
+          }
+        }
+      } catch (error) {
+        console.error("❌ Failed to load creator data:", error)
+        toast.error("Failed to load creator data")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    loadCreatorData()
+  }, [contract, walletAddress])
+  
+  const handleContentUpload = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Handle content upload logic here
+    console.log("Uploading content:", newContent)
+    setNewContent({ title: "", description: "", file: null, type: "", ipfsHash: "" })
+  }
+
+  const [streamingEarnings, setStreamingEarnings] = useState(1250.75)
   const [claimableAmount, setClaimableAmount] = useState(12.45)
 
   // Simulate streaming earnings
@@ -137,6 +226,56 @@ export default function DashboardPage() {
     setIsUploading(false)
   }
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
+        <Navbar />
+        <main className="px-6 py-12">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading your dashboard...</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Show not registered state
+  if (!isCreator) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
+        <Navbar />
+        <main className="px-6 py-12">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <Card className="max-w-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-yellow-500" />
+                    Not Registered as Creator
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                    You need to register as a creator first to access the dashboard.
+                  </p>
+                  <Button onClick={() => window.location.href = '/register'} className="w-full">
+                    Register as Creator
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <Navbar />
@@ -147,16 +286,19 @@ export default function DashboardPage() {
           <div className="mb-8">
             <div className="flex items-center gap-4 mb-4">
               <img
-                src={mockCreatorData.avatar}
-                alt={mockCreatorData.name}
+                src={creatorData?.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${walletAddress}`}
+                alt={creatorData?.name || "Creator"}
                 className="w-16 h-16 rounded-full object-cover"
               />
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  Welcome back, {mockCreatorData.name}
+                  Welcome back, {creatorData?.name || "Creator"}
                 </h1>
                 <p className="text-muted-foreground">
-                  Creator since {mockCreatorData.joinedDate}
+                  Creator since {creatorData?.joinedDate || "Recently"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {walletAddress && `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
                 </p>
               </div>
             </div>
@@ -170,9 +312,11 @@ export default function DashboardPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{streamingEarnings.toFixed(3)} DOT</div>
+                <div className="text-2xl font-bold">
+                  {((creatorData?.totalEarned || 0) / 1e18).toFixed(3)} DOT
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +2.3% from last month
+                  From contract: {creatorData?.totalEarned || 0} wei
                 </p>
               </CardContent>
             </Card>
@@ -183,22 +327,22 @@ export default function DashboardPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{mockCreatorData.subscribers}</div>
+                <div className="text-2xl font-bold">{creatorData?.subscribers || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  +12 new this month
+                  {creatorData?.subscribers ? "Active subscribers" : "No subscribers yet"}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Monthly Rate</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Content</CardTitle>
+                <Upload className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{mockCreatorData.monthlyRate} DOT</div>
+                <div className="text-2xl font-bold">{creatorData?.contentCount || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  Per subscriber
+                  {creatorData?.contentHash ? "Has exclusive content" : "No content uploaded"}
                 </p>
               </CardContent>
             </Card>

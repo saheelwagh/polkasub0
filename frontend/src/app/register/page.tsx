@@ -151,7 +151,16 @@ export default function RegisterPage() {
       }
     } catch (error) {
       console.error("Registration error:", error)
-      toast.error(`Registration failed: ${error.message || "Unknown error"}`)
+      
+      // Handle specific error types
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (errorMessage.includes("Account not mapped")) {
+        toast.error("Account needs to be mapped first. Click 'Map Account' button in the navbar.")
+      } else if (errorMessage.includes("already registered")) {
+        toast.error("You are already registered as a creator!")
+      } else {
+        toast.error(`Registration failed: ${errorMessage || "Unknown error"}`)
+      }
     } finally {
       setIsRegistering(false)
     }
