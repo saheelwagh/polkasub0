@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { CheckCircle, User, FileText, DollarSign, Upload, Wallet } from "lucide-react"
-import { useAccounts } from "@reactive-dot/react"
+import { useAccounts, useClient, useChainId } from "@reactive-dot/react"
 import { useSignerAndAddress } from "@/hooks/use-signer-and-address"
+import { useWalletContext } from "@/components/providers/wallet-context"
 import { CreatorTreasuryContract } from "@/lib/contract"
 import { toast } from "sonner"
 
@@ -20,6 +21,18 @@ export default function RegisterPage() {
   const router = useRouter()
   const accounts = useAccounts()
   const { signer, signerAddress } = useSignerAndAddress()
+  const { account } = useWalletContext()
+  const client = useClient()
+  const chainId = useChainId()
+  
+  // Debug logging
+  useEffect(() => {
+    console.log("🔍 Registration Page Debug:")
+    console.log("- accounts:", accounts)
+    console.log("- signer:", signer)
+    console.log("- signerAddress:", signerAddress)
+    console.log("- wallet context account:", account)
+  }, [accounts, signer, signerAddress, account])
   
   const [formData, setFormData] = useState({
     name: "",
@@ -37,16 +50,28 @@ export default function RegisterPage() {
   // Initialize contract
   useEffect(() => {
     const initContract = async () => {
-      const contractInstance = new CreatorTreasuryContract()
+      if (!client || !chainId) {
+        console.log("⏳ Waiting for client and chainId...")
+        return
+      }
+      
+      console.log("🔗 Initializing contract...")
+      console.log("- client:", client)
+      console.log("- chainId:", chainId)
+      
+      const contractInstance = new CreatorTreasuryContract(client, chainId)
       const success = await contractInstance.initialize()
       if (success) {
+        console.log("✅ Contract initialized successfully")
+        console.log("🔍 Contract ready:", contractInstance.isReady())
         setContract(contractInstance)
       } else {
+        console.error("❌ Contract initialization failed")
         toast.error("Failed to connect to contract")
       }
     }
     initContract()
-  }, [])
+  }, [client, chainId])
 
   const availableTags = [
     "Web3", "Polkadot", "Tutorials", "DeFi", "Research", "Analysis", 
@@ -81,8 +106,29 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!signerAddress || !signer || !contract) {
-      toast.error("Please connect your wallet and wait for contract initialization")
+    
+    // Check for wallet connection from multiple sources
+    const walletAddress = signerAddress || account?.address
+    const walletSigner = signer || account?.polkadotSigner
+    
+    console.log("🚀 Registration attempt:")
+    console.log("- walletAddress:", walletAddress)
+    console.log("- walletSigner:", walletSigner)
+    console.log("- contract:", contract)
+    console.log("- contract ready:", contract?.isReady())
+    
+    if (!walletAddress) {
+      toast.error("Please connect your wallet first")
+      return
+    }
+    
+    if (!walletSigner) {
+      toast.error("Wallet signer not available. Please reconnect your wallet.")
+      return
+    }
+    
+    if (!contract || !contract.isReady()) {
+      toast.error("Contract not initialized. Please refresh the page and try again.")
       return
     }
 
@@ -92,24 +138,26 @@ export default function RegisterPage() {
       toast.info("Registering creator on blockchain...")
       
       // Call the contract to register creator
-      const result = await contract.registerCreator(formData.name, signerAddress, signer)
+      const result = await contract.registerCreator(formData.name, walletAddress, walletSigner)
       
-      if (result.success) {
+      console.log("📝 Registration result:", result)
+      
+      if (result && result.success) {
         toast.success("Creator registration successful!")
         // Redirect to dashboard after successful registration
         router.push('/dashboard')
       } else {
-        throw new Error("Registration failed")
+        throw new Error("Registration transaction failed")
       }
     } catch (error) {
       console.error("Registration error:", error)
-      toast.error("Registration failed. Please try again.")
+      toast.error(`Registration failed: ${error.message || "Unknown error"}`)
     } finally {
       setIsRegistering(false)
     }
   }
 
-  const isConnected = !!signerAddress
+  const isConnected = !!(signerAddress || account?.address)
   const isFormValid = formData.name && formData.bio && formData.monthlyRate && isConnected
 
   return (
@@ -162,7 +210,7 @@ export default function RegisterPage() {
                             <span className="font-medium">Wallet Connected</span>
                           </div>
                           <p className="text-sm text-green-600 mt-1 font-mono">
-                            {signerAddress}
+                            {signerAddress || account?.address}
                           </p>
                         </div>
                       )}

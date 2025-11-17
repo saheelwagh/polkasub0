@@ -1,26 +1,32 @@
-import { createClient } from 'polkadot-api'
-import { getWsProvider } from 'polkadot-api/ws-provider/web'
 import { createInkSdk } from '@polkadot-api/sdk-ink'
-import contractMetadata from './creator_treasury.json'
-
-const CONTRACT_ADDRESS = '0xa51148989ed86b2b26e7b4dd3ea7ff08b95ae6d3'
-const RPC_URL = 'wss://testnet-passet-hub.polkadot.io'
+import { useClient, useChainId } from '@reactive-dot/react'
+import { creatorTreasury } from '@/lib/inkathon/deployments'
 
 export class CreatorTreasuryContract {
   private client: any = null
   private sdk: any = null
   private contract: any = null
+  private chainId: string = 'passethub'
+  
+  constructor(client: any, chainId: string = 'passethub') {
+    this.client = client
+    this.chainId = chainId
+  }
   
   async initialize() {
     try {
-      // Create Polkadot API client
-      this.client = createClient(getWsProvider(RPC_URL))
+      if (!this.client) {
+        throw new Error('Client not provided')
+      }
       
       // Create ink SDK and initialize the contract
       this.sdk = createInkSdk(this.client)
-      this.contract = this.sdk.getContract(contractMetadata, CONTRACT_ADDRESS)
+      this.contract = this.sdk.getContract(
+        creatorTreasury.contract, 
+        creatorTreasury.evmAddresses[this.chainId as keyof typeof creatorTreasury.evmAddresses]
+      )
       
-      console.log('✅ Contract connected to:', CONTRACT_ADDRESS)
+      console.log('✅ Contract connected to:', creatorTreasury.evmAddresses[this.chainId as keyof typeof creatorTreasury.evmAddresses])
       return true
     } catch (error) {
       console.error('❌ Contract connection failed:', error)
@@ -38,7 +44,7 @@ export class CreatorTreasuryContract {
     if (!this.contract) throw new Error('Contract not initialized')
     
     try {
-      const result = await this.contract.query("getCreatorProfile", { origin: address }, address)
+      const result = await this.contract.query("get_creator_profile", { origin: address }, address)
       return result.success ? result.value.response : null
     } catch (error) {
       console.error('Query failed:', error)
@@ -50,7 +56,7 @@ export class CreatorTreasuryContract {
     if (!this.contract) throw new Error('Contract not initialized')
     
     try {
-      const result = await this.contract.query("isCreator", { origin: address }, address)
+      const result = await this.contract.query("is_creator", { origin: address }, address)
       return result.success ? result.value.response : false
     } catch (error) {
       console.error('Query failed:', error)
@@ -60,18 +66,31 @@ export class CreatorTreasuryContract {
   
   // Transaction methods (cost gas)
   async registerCreator(name: string, signerAddress: string, signer: any) {
-    if (!this.contract) throw new Error('Contract not initialized')
+    if (!this.contract || !this.sdk) throw new Error('Contract not initialized')
     
     try {
       console.log('🔄 Registering creator:', name, 'from:', signerAddress)
       
-      const result = await this.contract.exec("registerCreator", { 
-        origin: signerAddress,
-        signer 
-      }, name)
+      // Check if account is mapped (required for ink! contracts)
+      const isMapped = await this.sdk.addressIsMapped(signerAddress)
+      if (!isMapped) {
+        throw new Error("Account not mapped. Please map your account first using the Map Account button.")
+      }
       
-      console.log('✅ Registration transaction submitted:', result)
-      return result
+      // Send transaction using the correct API
+      const tx = this.contract
+        .send("register_creator", { origin: signerAddress }, name)
+        .signAndSubmit(signer)
+      
+      console.log('✅ Registration transaction submitted')
+      
+      // Wait for transaction result
+      const result = await tx
+      if (!result.ok) {
+        throw new Error("Transaction failed", { cause: result.dispatchError })
+      }
+      
+      return { success: true, result }
     } catch (error) {
       console.error('❌ Registration failed:', error)
       throw error
@@ -79,13 +98,4 @@ export class CreatorTreasuryContract {
   }
 }
 
-// Singleton instance
-let contractInstance: CreatorTreasuryContract | null = null
-
-export async function getContract(): Promise<CreatorTreasuryContract> {
-  if (!contractInstance) {
-    contractInstance = new CreatorTreasuryContract()
-    await contractInstance.initialize()
-  }
-  return contractInstance
-}
+// Note: Contract instances should be created with client and chainId from reactive-dot hooks
