@@ -492,3 +492,5 @@ useEffect(() => {
 ---
 
 **Ready to start integration!** 🎉 All contract functions are deployed and tested. Frontend modifications will handle any interface mismatches.
+
+https://docs.dedot.dev/typink
