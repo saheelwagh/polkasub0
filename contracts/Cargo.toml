@@ -1,4 +1,4 @@
 [workspace]
 
 resolver = "3"
-members = ["src/flipper", "src/creator_treasury_pop", "creator_treasury_stable"]
+members = ["src/flipper", "src/creator_treasury", "src/creator_treasury_pop", "creator_treasury_stable"]

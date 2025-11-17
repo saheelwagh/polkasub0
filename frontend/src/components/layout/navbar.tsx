@@ -36,16 +36,22 @@ export function Navbar() {
                       Discover Creators
                     </Link>
                     <Link 
-                      href="/register" 
+                      href="/subscriptions" 
                       className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      Become a Creator
+                      My Subscriptions
                     </Link>
                     <Link 
                       href="/dashboard" 
                       className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      Dashboard
+                      Creator Dashboard
+                    </Link>
+                    <Link 
+                      href="/register" 
+                      className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Become a Creator
                     </Link>
                   </div>
                 </div>
